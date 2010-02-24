@@ -1,0 +1,14 @@
+Sample: 
+Step (um): 0.30
+X-length (um): 12.00
+Y-length (um): 15.90
+Horizontal Record Length: 24000
+Fast Frame Count: 1
+Average number of reads: 5
+Notes: no notes entered
+ Time (ns)      V (mV) 
+0.0000e+000 7.2906e-001
+1.6667e-002 1.1500e+000
+3.3333e-002 1.5500e+000
+5.0000e-002 2.2375e+000
+6.6667e-002 3.4000e+000
