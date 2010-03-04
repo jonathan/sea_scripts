@@ -1,0 +1,26 @@
+<h1>Listing scope_inputs</h1>
+
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Circuit</th>
+    <th>Time</th>
+		<th>Voltage</th>
+		<th>Energy</th>
+		<th>Pixel</th>
+		<th>Scan</th>
+  </tr>
+
+<% @scope_inputs.each do |scope_input| %>
+  <tr>
+		<td><%= scope_input.id %></td>
+		<td><%= scope_input.circuit %></td>
+		<td><%= scope_input.time %></td>
+		<td><%= scope_input.voltage %></td>
+		<td><%= scope_input.energy %></td>
+		<td><%= scope_input.pixel %></td>
+		<td><%= scope_input.scan %></td>
+    <td><%= link_to 'Show', scope_input %></td>
+  </tr>
+<% end %>
+</table>
