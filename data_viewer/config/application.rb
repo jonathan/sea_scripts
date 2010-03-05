@@ -1,6 +1,10 @@
 require File.expand_path('../boot', __FILE__)
 
 require 'rails/all'
+# require 'rails'
+# require 'active_record'
+# require 'action_controller'
+# require 'active_resource'
 
 # Auto-require default libraries and those for the current Rails environment.
 Bundler.require :default, Rails.env
@@ -38,5 +42,8 @@ module DataViewer
 
     # Configure sensitive parameters which will be filtered from the log file.
     config.filter_parameters << :password
+    
+    config.session_store :cookie_store, { :key => "_myapp_973248723948723843783724923743298743927329" }
+    config.cookie_secret = "Autobots,transformandroll out!"
   end
 end
