@@ -1,30 +1,31 @@
 source :gemcutter
 
 gem 'rails', :git => 'git://github.com/rails/rails.git'
-git 'git://github.com/rails/arel.git'
-git 'git://github.com/rails/rack.git'
+gem 'arel', :git => 'git://github.com/rails/arel.git'
+gem 'rack', :git => 'git://github.com/rails/rack.git'
 
 gem 'inherited_resources'
+gem 'hpricot'
+
 group :db do
   gem 'pg'
 end
 
-
-# Use mongrel as the web server
-# gem 'mongrel'
+group :webserver do
+  gem 'unicorn'
+end
 
 # Deploy with Capistrano
 # gem 'capistrano'
 
 # Bundle the extra gems:
-# gem 'bj'
-# gem 'hpricot', '0.6'
 # gem 'sqlite3-ruby', :require => 'sqlite3'
 # gem 'aws-s3', :require => 'aws/s3'
 
-# Bundle gems for certain environments:
-# gem 'rspec', :group => :test
 group :test do
   gem 'rspec', '>= 2.0.0.beta.1'
   gem 'rspec-rails', '>= 2.0.0.beta.1'
+  gem 'capybara'
+  gem 'database_cleaner'
+  gem 'cucumber-rails'
 end
