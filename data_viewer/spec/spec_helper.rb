@@ -14,14 +14,13 @@ Rspec.configure do |config|
   # methods or matchers
   require 'rspec/expectations'
   config.include Rspec::Matchers
+  
 
-  # == Mock Framework
-  #
-  # If you prefer to use mocha, flexmock or RR, uncomment the appropriate line:
-  #
-  # config.mock_with :mocha
-  # config.mock_with :flexmock
-  # config.mock_with :rr
+  config.after(:each) do
+    DatabaseCleaner.strategy = :truncation
+    DatabaseCleaner.clean
+  end
+
   config.mock_with :rspec
 
   # == Fixtures
