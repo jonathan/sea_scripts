@@ -1,0 +1,6 @@
+source :gemcutter
+
+gem 'rspec', '2.0.0.beta.4'
+gem 'dm-core'
+gem 'dm-validations'
+gem 'do_postgres'

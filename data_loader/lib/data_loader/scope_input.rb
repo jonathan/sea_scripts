@@ -15,7 +15,5 @@ module DataLoader
     property :energy,  String
     property :pixel,   Integer
     property :scan,    String
-    property :x,       Float
-    property :y,       Float
   end
 end
