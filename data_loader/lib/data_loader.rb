@@ -17,24 +17,22 @@ module DataLoader
     def process_file(file_name)
       root = Pathname.new(file_name).basename.to_s.gsub(/.txt/, '')
       circuit, energy, pixel, scan = root.split('_')
-      ciruit_info = { 
+      circuit_info = { 
         :circuit => circuit, :energy => energy,
         :pixel => pixel, :scan => scan
       }
 
       lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
 
-      first_line = lines.unshift
-      t, v = first_line.split(' ')
-      
       max = { :voltage => 0.0, :time => 0.0 }
       min = { :voltage => 0.0, :time => 0.0 }
-
-      max[:voltage] = v.to_f if v.to_f >= 0
-      min[:voltage] = v.to_f if v.to_f < 0
-      prev_volt = v.to_f
+      prev_volt = 0.0
       
-      lines.each do |line|
+      lines.each_with_index do |line, i|
+        if i == 0
+          max, min, prev_volt = bootstrap(line, max, min)
+          next
+        end
         t, v = line.split(' ')
         t = t.to_f
         v = v.to_f
@@ -49,16 +47,25 @@ module DataLoader
           min[:time] = t
         end
 
-        if prev_volt < 0.0 && v >= 0.0
-          ScopeInput.create(circuit_info.merge(min))
+        if (prev_volt < 0.0 && v >= 0.0) || lines.size == i + 1
+          ScopeInput.create(circuit_info.merge(min)) if min[:voltage] != 0.0
           min[:voltage] = min[:time] = 0.0
         end
 
-        if prev_volt >= 0.0 && v < 0.0
-          ScopeInput.create(circuit_info.merge(max))
+        if (prev_volt >= 0.0 && v < 0.0) || lines.size == i + 1
+          ScopeInput.create(circuit_info.merge(max)) if max[:voltage] != 0.0
           max[:voltage] = max[:time] = 0.0
         end
+        prev_volt = v
       end
+    end
+    
+    def bootstrap(line, max, min)
+      t, v = line.split(' ')
+      v = v.to_f
+      max[:voltage] = v if v >= 0.0
+      min[:voltage] = v if v < 0.0
+      return max, min, v
     end
   end
 end
