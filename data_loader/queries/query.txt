@@ -1,7 +1,11 @@
-select time from scope_inputs where voltage < (
-select avg(voltage) from scope_inputs where voltage >= 0.0) and
-sea_data_test-# voltage > 0.0;
+select min(voltage) from (
+	select time,voltage from scope_inputs where voltage < (
+	select avg(voltage) from scope_inputs where voltage >= 0.0) and
+	voltage > 0.0
+) as max_strike;
 
-select time from scope_inputs where voltage > (
-select avg(voltage) from scope_inputs where voltage < 0.0) and
-voltage < 0.0;
+select max(voltage) from (
+  select voltage from scope_inputs where voltage > (
+  select avg(voltage) from scope_inputs where voltage < 0.0) and
+  voltage < 0.0
+) as min_strike;
