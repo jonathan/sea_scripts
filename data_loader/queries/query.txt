@@ -1,11 +1,13 @@
-select min(voltage) from (
-	select time,voltage from scope_inputs where voltage < (
-	select avg(voltage) from scope_inputs where voltage >= 0.0) and
-	voltage > 0.0
-) as max_strike;
+select avg(voltage) from scope_inputs where voltage >= 0.0;
 
-select max(voltage) from (
-  select voltage from scope_inputs where voltage > (
-  select avg(voltage) from scope_inputs where voltage < 0.0) and
-  voltage < 0.0
-) as min_strike;
+select avg(voltage) from scope_inputs where voltage < 0.0;
+
+
+select (a.voltage - b.voltage), a.id as A_ID, b.id as B_ID from error_points a, error_points b where
+  a.pixel = b.pixel and a.scan = b.scan and a.type = 'MAX' and b.type = 'MIN';
+
+[5.1144855325914, 4.92865435816166, 4.90486847619048, 5.08724848966613, 4.82314372019079, 5.13900826709061, 4.8754812400636, 5.09010366085578, 5.11092761904762, 5.12299046104928]
+avg(5.01969118249074)
+
+[-5.06030644444445, -5.05565437201909, -5.01839523052465, -5.29817276190476, -5.01359872813991, -5.32541285714285, -5.09242829888714, -5.26792852380952, -5.26452193958663, -5.04525198728141]
+avg(-5.14416711437404)

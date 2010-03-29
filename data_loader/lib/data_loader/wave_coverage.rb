@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module DataLoader
   class WaveCoverage
     include DataMapper::Resource
@@ -13,7 +15,7 @@ module DataLoader
     property :x_intercept,  Float, :required => true, :index => true
     property :strike_point, Float, :required => true
     property :energy,       String
-    property :pixel,        Integer
-    property :scan,         String
+    property :pixel,        Integer, :index => true
+    property :scan,         String, :index => true
   end
 end

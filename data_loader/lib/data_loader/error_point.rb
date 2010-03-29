@@ -1,9 +1,9 @@
 # encoding: utf-8
 
 module DataLoader
-  class ScopeInput
+  class ErrorPoint
     include DataMapper::Resource
-    storage_names[:default] = 'scope_inputs'
+    storage_names[:default] = 'error_points'
 
     # t9t10 --> the circuit that was scanned...in the case, all will be t9t10 (a string)
     # high --> laser pulse energy (also a string)
@@ -17,5 +17,6 @@ module DataLoader
     property :energy,  String
     property :pixel,   Integer, :index => true
     property :scan,    String, :index => true
+    property :type,    String, :index => true
   end
 end

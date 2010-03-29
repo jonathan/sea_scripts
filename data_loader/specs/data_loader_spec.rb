@@ -11,22 +11,22 @@ describe "DataLoader" do
     DataLoader::WaveCoverage.auto_migrate!
   end
 
-  before(:each) do
-    repository(:default) do
-      transaction = DataMapper::Transaction.new(repository)
-      transaction.begin
-      repository.adapter.push_transaction(transaction)
-    end
-  end
-  
-  after(:each) do
-    repository(:default) do
-      while repository.adapter.current_transaction
-        repository.adapter.current_transaction.rollback
-        repository.adapter.pop_transaction
-      end
-    end
-  end
+  # before(:each) do
+  #   repository(:default) do
+  #     transaction = DataMapper::Transaction.new(repository)
+  #     transaction.begin
+  #     repository.adapter.push_transaction(transaction)
+  #   end
+  # end
+  # 
+  # after(:each) do
+  #   repository(:default) do
+  #     while repository.adapter.current_transaction
+  #       repository.adapter.current_transaction.rollback
+  #       repository.adapter.pop_transaction
+  #     end
+  #   end
+  # end
 
   context "parse filename" do
     it "returns a hash of circuit info" do
@@ -120,9 +120,8 @@ describe "DataLoader" do
   context "wave coverage" do
     it "should have 1 x-intercept" do
       data_file = File.expand_path('./specs/spec_data/t3t34_high_a_1000_avg1.txt')
-      DataLoader::process_file(data_file)
+      DataLoader::process_intercepts(data_file)
       DataLoader::WaveCoverage.count.should eq(1)
-      # DataLoader::WaveCoverage.first.x_intercept.should be_close(0.401, 0.001)
       DataLoader::WaveCoverage.first.x_intercept.should be_close(0.411066231394898, 0.001)
     end
   end
