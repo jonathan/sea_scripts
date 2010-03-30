@@ -1,0 +1,49 @@
+--- 
+dependencies: 
+  do_postgres: 
+    group: 
+    - :default
+    version: ">= 0"
+  dm-validations: 
+    group: 
+    - :default
+    version: ">= 0"
+  rspec: 
+    group: 
+    - :default
+    version: = 2.0.0.beta.4
+  dm-aggregates: 
+    group: 
+    - :default
+    version: ">= 0"
+  dm-core: 
+    group: 
+    - :default
+    version: ">= 0"
+specs: 
+- addressable: 
+    version: 2.1.1
+- data_objects: 
+    version: 0.10.1
+- extlib: 
+    version: 0.9.14
+- dm-core: 
+    version: 0.10.2
+- dm-aggregates: 
+    version: 0.10.2
+- dm-validations: 
+    version: 0.10.2
+- do_postgres: 
+    version: 0.10.1
+- rspec-core: 
+    version: 2.0.0.beta.4
+- rspec-expectations: 
+    version: 2.0.0.beta.4
+- rspec-mocks: 
+    version: 2.0.0.beta.4
+- rspec: 
+    version: 2.0.0.beta.4
+hash: e32bd5d1d2b9b4d11f3a7aaddcadcdbd883cbcbe
+sources: 
+- Rubygems: 
+    uri: http://gemcutter.org

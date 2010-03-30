@@ -20,42 +20,6 @@ module DataLoader
       ErrorPoint.auto_migrate!
     end
 
-    def process_file(file_name)
-      circuit_info = parse_filename(file_name)
-
-      lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
-
-      max = { :voltage => 0.0, :time => 0.0 }
-      min = { :voltage => 0.0, :time => 0.0 }
-      prev_voltage = 0.0
-      
-      lines.each do |line|
-        t, v = line.split(' ')
-        t = t.to_f; v = v.to_f
-
-        if v > max[:voltage] && v > 0.3
-          max[:voltage] = v
-          max[:time] = t
-        end
-
-        if v < min[:voltage] && v < -0.3
-          min[:voltage] = v
-          min[:time] = t
-        end
-
-        if (prev_voltage < 0.0 && v >= 0.0)
-          ScopeInput.create(circuit_info.merge(min)) if min[:voltage] != 0.0
-          min[:voltage] = min[:time] = 0.0
-        end
-
-        if (prev_voltage >= 0.0 && v < 0.0)
-          ScopeInput.create(circuit_info.merge(max)) if max[:voltage] != 0.0
-          max[:voltage] = max[:time] = 0.0
-        end
-        prev_voltage = v
-      end
-    end
-
     def process_intercepts(file_name)
       circuit_info = parse_filename(file_name)
 
@@ -85,8 +49,8 @@ module DataLoader
 
       lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
 
-      max = { :voltage => 0.0, :time => 0.0, :type => 'MAX' }
-      min = { :voltage => 0.0, :time => 0.0, :type => 'MIN' }
+      max = { :voltage => nil, :time => nil, :type => 'MAX' }
+      min = { :voltage => nil, :time => nil, :type => 'MIN' }
       prev_voltage = 0.0
       
       lines.each do |line|
@@ -96,24 +60,22 @@ module DataLoader
         next if t < 208.00
         return if t > 211.00
 
-        if v > max[:voltage] && v > 0.3
-          max[:voltage] = v
-          max[:time] = t
+        if (max[:voltage].nil? || v > max[:voltage])
+          max[:voltage] = v; max[:time] = t
         end
 
-        if v < min[:voltage] && v < -0.3
-          min[:voltage] = v
-          min[:time] = t
+        if (min[:voltage].nil? || v < min[:voltage])
+          min[:voltage] = v; min[:time] = t
         end
 
-        if (prev_voltage < 0.0 && v >= 0.0)
-          ErrorPoint.create(circuit_info.merge(min)) if min[:voltage] != 0.0 && min[:voltage] > -4.14416711437404
-          min[:voltage] = min[:time] = 0.0
+        if (prev_voltage < v && point_delta(min, max))
+          ErrorPoint.create(circuit_info.merge(max)) if max[:voltage] < 4.01969118249074
+          max[:voltage] = max[:time] = nil
         end
-
-        if (prev_voltage >= 0.0 && v < 0.0)
-          ErrorPoint.create(circuit_info.merge(max)) if max[:voltage] != 0.0 && max[:voltage] < 4.01969118249074
-          max[:voltage] = max[:time] = 0.0
+        
+        if (prev_voltage > v && point_delta(min, max))
+          ErrorPoint.create(circuit_info.merge(min)) if min[:voltage] > -4.14416711437404
+          min[:voltage] = min[:time] = nil
         end
         prev_voltage = v
       end
@@ -135,13 +97,13 @@ module DataLoader
       end
     end
 
-    def bootstrap(line, max, min)
-      t, v = line.split(' ')
-      v = v.to_f
-      t = t.to_f
-      max[:voltage] = v if v >= 0.0
-      min[:voltage] = v if v < 0.0
-      return max, min, { :voltage => v, :time => t }
+    def point_delta(min, max)
+      time_delta = (min[:time].abs() - max[:time].abs()).abs()
+      voltage_delta = (max[:voltage].abs() - min[:voltage].abs()).abs()
+      # TODO: the thresholds should be configurable
+      time_threshold = 0.4
+      voltage_threshold = 2.0
+      return (time_delta > time_threshold) && (voltage_delta < voltage_threshold)
     end
 
     def calculate_intercept(point1, point2)

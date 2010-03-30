@@ -9,6 +9,7 @@ describe "DataLoader" do
     DataMapper.setup(:default, 'postgres://localhost/sea_data_test')
     DataLoader::ScopeInput.auto_migrate!
     DataLoader::WaveCoverage.auto_migrate!
+    DataLoader::ErrorPoint.auto_migrate!
   end
 
   # before(:each) do
@@ -52,44 +53,6 @@ describe "DataLoader" do
     end
   end
 
-  context "bootstrap" do
-    before(:each) do
-      @max = { :voltage => 0.0, :time => 0.0 }
-      @min = { :voltage => 0.0, :time => 0.0 }
-      @prev_point = { :voltage => 0.0, :time => 0.0 }
-    end
-
-    it "sets the max voltage to v if it is higher than 0.0" do
-      v = 1.0
-      t = 2.0
-      line = [t.to_s, v.to_s].join(' ')
-      @max, @min, @prev_point = DataLoader::bootstrap(line, @max, @min)
-      @max[:voltage].should eq(v)
-      @prev_point[:voltage].should eq(v)
-      @prev_point[:time].should eq(t)
-    end
-
-    it "sets the max voltage to v if it is equal to 0.0" do
-      v = 0.0
-      t = 2.0
-      line = [t.to_s, v.to_s].join(' ')
-      @max, @min, @prev_point = DataLoader::bootstrap(line, @max, @min)
-      @max[:voltage].should eq(v)
-      @prev_point[:voltage].should eq(v)
-      @prev_point[:time].should eq(t)
-    end
-
-    it "sets the min voltage to v if it is lower than 0.0" do
-      v = -1.0
-      t = 2.0
-      line = [t.to_s, v.to_s].join(' ')
-      @max, @min, @prev_point = DataLoader::bootstrap(line, @max, @min)
-      @min[:voltage].should eq(v)
-      @prev_point[:voltage].should eq(v)
-      @prev_point[:time].should eq(t)
-    end
-  end
-
   context "calculate intercept" do
     before(:each) do
       @point1 = { :voltage => -0.24219, :time => 208.7 }
@@ -98,22 +61,12 @@ describe "DataLoader" do
     end
 
     it "should calculte an x-intercept of 208.719" do
-      # DataLoader::calculate_intercept(@point1, @point2).should eq(208.719)
       DataLoader::calculate_intercept(@point1, @point2).should be_close(208.708933768605, 0.001)
     end
     
     it "should equal the strike point minus the intercept" do
       intercept = DataLoader::calculate_intercept(@point1, @point2)
-      # (@strike_point - intercept).should be_close(0.401, 0.001)
       (@strike_point - intercept).should be_close(0.411066231394898, 0.001)
-    end
-  end
-
-  context "scope inputs" do
-    it "loads in 6 data points" do
-      data_file = File.expand_path('./specs/spec_data/t3t33_high_a_1000_avg1.txt')
-      DataLoader::process_file(data_file)
-      DataLoader::ScopeInput.count.should eq(6)
     end
   end
 
@@ -123,6 +76,28 @@ describe "DataLoader" do
       DataLoader::process_intercepts(data_file)
       DataLoader::WaveCoverage.count.should eq(1)
       DataLoader::WaveCoverage.first.x_intercept.should be_close(0.411066231394898, 0.001)
+    end
+  end
+
+  context "error points" do
+    it "should have 1 error" do
+      data_file = File.expand_path('./specs/spec_data/t3t33_high_1003_avg1.txt')
+      DataLoader::process_error_points(data_file)
+      DataLoader::ErrorPoint.count.should eq(1)
+    end
+  end
+
+  context "point delta" do
+    it "should return 'true' if the time/voltage deltas pass the thresholds" do
+      min = { :time => 209.0, :voltage => -2.0 }
+      max = { :time => 209.42, :voltage => 2.0 }
+      DataLoader::point_delta(min, max).should be_true
+    end
+
+    it "should return 'false' if the time/voltage deltas don't pass the thresholds" do
+      min = { :time => 209.0, :voltage => -1.0 }
+      max = { :time => 209.3, :voltage => 1.0 }
+      DataLoader::point_delta(min, max).should be_false
     end
   end
 end
