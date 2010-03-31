@@ -49,8 +49,8 @@ module DataLoader
 
       lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
 
-      max = { :voltage => nil, :time => nil, :type => 'MAX' }
-      min = { :voltage => nil, :time => nil, :type => 'MIN' }
+      max = { :voltage => 0.0, :time => 0.0, :strike_point => 209.12, :type => 'MAX' }
+      min = { :voltage => 0.0, :time => 0.0, :strike_point => 209.12, :type => 'MIN' }
       prev_voltage = 0.0
       
       lines.each do |line|
@@ -60,22 +60,28 @@ module DataLoader
         next if t < 208.00
         return if t > 211.00
 
-        if (max[:voltage].nil? || v > max[:voltage])
+        if (v > max[:voltage] && v > 0.3)
           max[:voltage] = v; max[:time] = t
         end
 
-        if (min[:voltage].nil? || v < min[:voltage])
+        if (v < min[:voltage] && v < -0.3)
           min[:voltage] = v; min[:time] = t
         end
 
-        if (prev_voltage < v && point_delta(min, max))
-          ErrorPoint.create(circuit_info.merge(max)) if max[:voltage] < 4.01969118249074
-          max[:voltage] = max[:time] = nil
+        if (prev_voltage >= 0.0 && v < 0.0)
+          if max[:voltage] != 0.0 && max[:voltage] < 4.01969118249074
+            max[:strike_delta] = (max[:strike_point] - t).abs()
+            ErrorPoint.create(circuit_info.merge(max))
+          end
+          max[:voltage] = max[:time] = 0.0
         end
         
-        if (prev_voltage > v && point_delta(min, max))
-          ErrorPoint.create(circuit_info.merge(min)) if min[:voltage] > -4.14416711437404
-          min[:voltage] = min[:time] = nil
+        if (prev_voltage < 0.0 && v >= 0.0)
+          if min[:voltage] != 0.0 && min[:voltage] > -4.14416711437404
+            min[:strike_delta] = (min[:strike_point] - t).abs()
+            ErrorPoint.create(circuit_info.merge(min))
+          end
+          min[:voltage] = min[:time] = 0.0
         end
         prev_voltage = v
       end

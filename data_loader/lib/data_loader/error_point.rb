@@ -10,13 +10,15 @@ module DataLoader
     # 1012 --> the pixel number...when in the scan the file was made (int)
     # avg1 --> the scan number as: avg#. In this case it's always integers 1-5.
 
-    property :id,      Serial
-    property :circuit, String, :required => true, :index => true
-    property :time,    Float, :required => true, :index => true
-    property :voltage, Float, :required => true, :index => true
-    property :energy,  String
-    property :pixel,   Integer, :index => true
-    property :scan,    String, :index => true
-    property :type,    String, :index => true
+    property :id,           Serial
+    property :circuit,      String, :required => true, :index => true
+    property :time,         Float, :required => true, :index => true
+    property :voltage,      Float, :required => true, :index => true
+    property :strike_point, Float, :required => true
+    property :strike_delta, Float, :required => true
+    property :energy,       String
+    property :pixel,        Integer, :index => true
+    property :scan,         String, :index => true
+    property :type,         String, :index => true
   end
 end
