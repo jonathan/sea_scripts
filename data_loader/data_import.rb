@@ -15,5 +15,6 @@ dir = ARGV[0] if ARGV[0]
 Dir.glob(dir + '*.txt') do |file_name|
   # DataLoader::process_file(file_name)
   # DataLoader::process_intercepts(file_name)
-  DataLoader::process_error_points(file_name)
+  # DataLoader::process_error_points(file_name)
+  DataLoader::process_ugly_error_points(file_name)
 end

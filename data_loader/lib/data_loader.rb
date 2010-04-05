@@ -97,11 +97,11 @@ module DataLoader
       lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
 
       new_zero = 38.8
-      file_config = { :strike_point = 9.2, :time_increment => 20.0 }
-      max = { :voltage => new_zero, :time => new_zero, 
-        :strike_point => file_config[:strike_point, 
-        :type => 'MAX' }
-      min = { :voltage => new_zero, :time => new_zero, :strike_point => 209.12, :type => 'MIN' }
+      file_config = { :strike_point => 9.2, :time_increment => 20.0 }
+      max = { :voltage => new_zero, :time => 0.0,
+        :strike_point => file_config[:strike_point], :type => 'MAX' }
+      min = { :voltage => new_zero, :time => 0.0,
+        :strike_point => file_config[:strike_point], :type => 'MIN' }
       prev_voltage = 0.0
       
       lines.each do |line|
@@ -109,6 +109,11 @@ module DataLoader
         t = t.to_f; v = v.to_f
         
         next if t < file_config[:strike_point] - 2.0
+        if t > file_config[:strike_point] + 2.0
+          circuit_info[:scan].succ!
+          file_config[:strike_point] += file_config[:time_increment]
+          min[:strike_point] = max[:strike_point] = file_config[:strike_point]
+        end
 
         if (v > max[:voltage] && v > new_zero)
           max[:voltage] = v; max[:time] = t
@@ -119,19 +124,19 @@ module DataLoader
         end
 
         if (prev_voltage >= new_zero && v < new_zero)
-          if max[:voltage] != new_zero && max[:voltage] < 61.48
+          if max[:voltage] != new_zero && max[:voltage] < 50.14
             max[:strike_delta] = (max[:strike_point] - t).abs()
             ErrorPoint.create(circuit_info.merge(max))
           end
-          max[:voltage] = max[:time] = new_zero
+          max[:voltage] = new_zero; max[:time] = 0.0
         end
         
         if (prev_voltage < new_zero && v >= new_zero)
-          if min[:voltage] != new_zero && min[:voltage] > 16.2
+          if min[:voltage] != new_zero && min[:voltage] > 27.46
             min[:strike_delta] = (min[:strike_point] - t).abs()
             ErrorPoint.create(circuit_info.merge(min))
           end
-          min[:voltage] = min[:time] = new_zero
+          max[:voltage] = new_zero; max[:time] = 0.0
         end
         prev_voltage = v
       end

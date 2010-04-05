@@ -12,22 +12,22 @@ describe "DataLoader" do
     DataLoader::ErrorPoint.auto_migrate!
   end
 
-  # before(:each) do
-  #   repository(:default) do
-  #     transaction = DataMapper::Transaction.new(repository)
-  #     transaction.begin
-  #     repository.adapter.push_transaction(transaction)
-  #   end
-  # end
-  # 
-  # after(:each) do
-  #   repository(:default) do
-  #     while repository.adapter.current_transaction
-  #       repository.adapter.current_transaction.rollback
-  #       repository.adapter.pop_transaction
-  #     end
-  #   end
-  # end
+  before(:each) do
+    repository(:default) do
+      transaction = DataMapper::Transaction.new(repository)
+      transaction.begin
+      repository.adapter.push_transaction(transaction)
+    end
+  end
+  
+  after(:each) do
+    repository(:default) do
+      while repository.adapter.current_transaction
+        repository.adapter.current_transaction.rollback
+        repository.adapter.pop_transaction
+      end
+    end
+  end
 
   context "parse filename" do
     it "returns a hash of circuit info" do
@@ -84,6 +84,14 @@ describe "DataLoader" do
       data_file = File.expand_path('./specs/spec_data/t3t33_high_1003_avg1.txt')
       DataLoader::process_error_points(data_file)
       DataLoader::ErrorPoint.count.should eq(1)
+    end
+  end
+
+  context "ugly error points" do
+    it "should have 3 errors" do
+      data_file = File.expand_path('./specs/spec_data/pos_1225.txt')
+      DataLoader::process_ugly_error_points(data_file)
+      DataLoader::ErrorPoint.count(:energy.eql => 'pos').should eq(24)
     end
   end
 
