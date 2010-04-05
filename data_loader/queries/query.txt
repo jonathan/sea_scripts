@@ -11,3 +11,15 @@ avg(5.01969118249074)
 
 [-5.06030644444445, -5.05565437201909, -5.01839523052465, -5.29817276190476, -5.01359872813991, -5.32541285714285, -5.09242829888714, -5.26792852380952, -5.26452193958663, -5.04525198728141]
 avg(-5.14416711437404)
+
+select * from error_points limit 10;
+select * from error_points where voltage > 5.0;
+select * from error_points where voltage between -3.0 and 3.0;
+copy error_points (COLUMNS) to '/Users/sarah/Projects/error_points.csv' with CSV HEADER;
+
+select count(*) from (select pixel, count(*) from error_points group by pixel, scan having 
+ count(*) = 3) as error_count;
+ 
+select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 5;
+ 
+copy (select time, strike_delta, pixel, scan from error_points group by pixel, scan having count(*) = 1) to '/Users/sarah/Projects/single_error.csv' with CSV HEADER;

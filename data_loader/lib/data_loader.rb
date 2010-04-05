@@ -10,14 +10,16 @@ module DataLoader
   autoload :ErrorPoint, 'data_loader/error_point'
   
   class << self
-    def setup(debug = false)
+    def setup(migrate = false, debug = false)
       DataMapper::Logger.new($stdout, :debug) if debug
 
       DataMapper.setup(:default, 'postgres://localhost/sea_data')
 
-      ScopeInput.auto_migrate!
-      WaveCoverage.auto_migrate!
-      ErrorPoint.auto_migrate!
+      if migrate
+        ScopeInput.auto_migrate!
+        WaveCoverage.auto_migrate!
+        ErrorPoint.auto_migrate!
+      end
     end
 
     def process_intercepts(file_name)
@@ -87,11 +89,61 @@ module DataLoader
       end
     end
 
+    # This file is globbed together in 1000 line chunks. ugh...
+    def process_ugly_error_points(file_name)
+      circuit_info = parse_filename(file_name)
+      circuit_info.merge!({ :circuit => 't9t10', :scan => 'avg1' })
+
+      lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
+
+      new_zero = 38.8
+      file_config = { :strike_point = 9.2, :time_increment => 20.0 }
+      max = { :voltage => new_zero, :time => new_zero, 
+        :strike_point => file_config[:strike_point, 
+        :type => 'MAX' }
+      min = { :voltage => new_zero, :time => new_zero, :strike_point => 209.12, :type => 'MIN' }
+      prev_voltage = 0.0
+      
+      lines.each do |line|
+        t, v = line.split(' ')
+        t = t.to_f; v = v.to_f
+        
+        next if t < file_config[:strike_point] - 2.0
+
+        if (v > max[:voltage] && v > new_zero)
+          max[:voltage] = v; max[:time] = t
+        end
+
+        if (v < min[:voltage] && v < new_zero)
+          min[:voltage] = v; min[:time] = t
+        end
+
+        if (prev_voltage >= new_zero && v < new_zero)
+          if max[:voltage] != new_zero && max[:voltage] < 61.48
+            max[:strike_delta] = (max[:strike_point] - t).abs()
+            ErrorPoint.create(circuit_info.merge(max))
+          end
+          max[:voltage] = max[:time] = new_zero
+        end
+        
+        if (prev_voltage < new_zero && v >= new_zero)
+          if min[:voltage] != new_zero && min[:voltage] > 16.2
+            min[:strike_delta] = (min[:strike_point] - t).abs()
+            ErrorPoint.create(circuit_info.merge(min))
+          end
+          min[:voltage] = min[:time] = new_zero
+        end
+        prev_voltage = v
+      end
+    end
+
     def parse_filename(file_name)
       root = Pathname.new(file_name).basename.to_s.gsub(/.txt/, '')
       tokens = root.split('_')
 
       case tokens.size
+        when 2
+          { :energy => tokens[0], :pixel => tokens[1] }
         when 4
           { :circuit => tokens[0], :energy => tokens[1],
             :pixel => tokens[2], :scan => tokens[3] }
