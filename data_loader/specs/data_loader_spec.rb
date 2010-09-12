@@ -88,7 +88,7 @@ describe "DataLoader" do
   end
 
   context "ugly error points" do
-    it "should have 3 errors" do
+    pending "should have 3 errors" do
       data_file = File.expand_path('./specs/spec_data/pos_1225.txt')
       DataLoader::process_ugly_error_points(data_file)
       DataLoader::ErrorPoint.count(:energy.eql => 'pos').should eq(24)

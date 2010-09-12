@@ -1,14 +1,13 @@
-# encoding: utf-8
 
-require 'dm-core'
-require 'dm-validations'
+#require 'dm-core'
+#require 'dm-validations'
 require 'pathname'
 
 module DataLoader
   autoload :ScopeInput, 'data_loader/scope_input'
   autoload :WaveCoverage, 'data_loader/wave_coverage'
   autoload :ErrorPoint, 'data_loader/error_point'
-  
+
   class << self
     def setup(migrate = false, debug = false)
       DataMapper::Logger.new($stdout, :debug) if debug
@@ -28,7 +27,7 @@ module DataLoader
       lines = File.readlines(file_name).map {|l| l.rstrip}[9..-1]
 
       prev_point = { :voltage => 0.0, :time => 0.0 }
-      
+
       lines.each do |line|
         t, v = line.split(' ')
         t = t.to_f; v = v.to_f
@@ -45,7 +44,7 @@ module DataLoader
         prev_point[:time] = t
       end
     end
-    
+
     def process_error_points(file_name)
       circuit_info = parse_filename(file_name)
 
@@ -54,11 +53,11 @@ module DataLoader
       max = { :voltage => 0.0, :time => 0.0, :strike_point => 209.12, :type => 'MAX' }
       min = { :voltage => 0.0, :time => 0.0, :strike_point => 209.12, :type => 'MIN' }
       prev_voltage = 0.0
-      
+
       lines.each do |line|
         t, v = line.split(' ')
         t = t.to_f; v = v.to_f
-        
+
         next if t < 208.00
         return if t > 211.00
 
@@ -77,7 +76,7 @@ module DataLoader
           end
           max[:voltage] = max[:time] = 0.0
         end
-        
+
         if (prev_voltage < 0.0 && v >= 0.0)
           if min[:voltage] != 0.0 && min[:voltage] > -4.14416711437404
             min[:strike_delta] = (min[:strike_point] - t).abs()
@@ -103,11 +102,11 @@ module DataLoader
       min = { :voltage => new_zero, :time => 0.0,
         :strike_point => file_config[:strike_point], :type => 'MIN' }
       prev_voltage = 0.0
-      
+
       lines.each do |line|
         t, v = line.split(' ')
         t = t.to_f; v = v.to_f
-        
+
         next if t < file_config[:strike_point] - 2.0
         if t > file_config[:strike_point] + 2.0
           circuit_info[:scan].succ!
@@ -130,7 +129,7 @@ module DataLoader
           end
           max[:voltage] = new_zero; max[:time] = 0.0
         end
-        
+
         if (prev_voltage < new_zero && v >= new_zero)
           if min[:voltage] != new_zero && min[:voltage] > 27.46
             min[:strike_delta] = (min[:strike_point] - t).abs()
@@ -142,6 +141,82 @@ module DataLoader
       end
     end
 
+#    def process_daniel_error_points(file_name)
+#      circuit_info = parse_filename(file_name)
+#      circuit_info.merge!({ :circuit => 'pll', :scan => '600' })
+#
+#      lines = File.readlines(file_name).map {|l| l.rstrip}[6..-1]
+#
+#      new_zero = 600.58
+#      file_config = { :strike_point => 252.8, :time_increment => 800.0 }
+#      max = { :voltage => new_zero, :time => 0.0,
+#        :strike_point => file_config[:strike_point], :type => 'MAX' }
+#      min = { :voltage => new_zero, :time => 0.0,
+#        :strike_point => file_config[:strike_point], :type => 'MIN' }
+#      prev_voltage = 0.0
+#
+#      lines.each do |line|
+#        t, v = line.split(' ')
+#        t = t.to_f; v = v.to_f
+#
+#        next if t < file_config[:strike_point] - 11.0
+#        if t > file_config[:strike_point] + 2.0
+#          circuit_info[:scan].succ!
+#          file_config[:strike_point] += file_config[:time_increment]
+#          min[:strike_point] = max[:strike_point] = file_config[:strike_point]
+#        end
+#
+#        if (v > max[:voltage] && v > new_zero)
+#          max[:voltage] = v; max[:time] = t
+#        end
+#
+#        if (v < min[:voltage] && v < new_zero)
+#          min[:voltage] = v; min[:time] = t
+#        end
+#
+#        if (prev_voltage >= new_zero && v < new_zero)
+#          if max[:voltage] != new_zero && max[:voltage] < 50.14
+#            max[:strike_delta] = (max[:strike_point] - t).abs()
+#            ErrorPoint.create(circuit_info.merge(max))
+#          end
+#          max[:voltage] = new_zero; max[:time] = 0.0
+#        end
+#
+#        if (prev_voltage < new_zero && v >= new_zero)
+#          if min[:voltage] != new_zero && min[:voltage] > 27.46
+#            min[:strike_delta] = (min[:strike_point] - t).abs()
+#            ErrorPoint.create(circuit_info.merge(min))
+#          end
+#          max[:voltage] = new_zero; max[:time] = 0.0
+#        end
+#        prev_voltage = v
+#      end
+#    end
+
+    def process_daniel_intercepts(file_name, strike_point=252.8)
+      circuit_info = parse_filename(file_name)
+
+      lines = File.readlines(file_name).map {|l| l.rstrip}[6..-1]
+
+      prev_point = { :voltage => 0.0, :time => 0.0 }
+
+      lines.each do |line|
+        t, v = line.split(' ')
+        t = t.to_f; v = v.to_f
+
+        return if t > strike_point
+
+        if (t > 242.8 && t < strike_point) && (prev_point[:voltage] < 600.0 && v > 600.0)
+          intercept = calculate_intercept(prev_point, { :voltage => v, :time => t })
+          # 209.12 should be configurable.
+          x_intercept = strike_point - intercept
+          WaveCoverage.create(circuit_info.merge({ :x_intercept => x_intercept, :strike_point => strike_point }))
+        end
+        prev_point[:voltage] = v
+        prev_point[:time] = t
+      end
+    end
+
     def parse_filename(file_name)
       root = Pathname.new(file_name).basename.to_s.gsub(/.txt/, '')
       tokens = root.split('_')
@@ -149,6 +224,9 @@ module DataLoader
       case tokens.size
         when 2
           { :energy => tokens[0], :pixel => tokens[1] }
+        when 3
+          { :circuit => 'pll',
+            :pixel => tokens[2], :scan => tokens[1] }
         when 4
           { :circuit => tokens[0], :energy => tokens[1],
             :pixel => tokens[2], :scan => tokens[3] }
