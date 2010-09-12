@@ -193,24 +193,34 @@ module DataLoader
 #      end
 #    end
 
-    def process_daniel_intercepts(file_name, strike_point=252.8)
+    def process_daniel_intercepts(file_name)
       circuit_info = parse_filename(file_name)
 
       lines = File.readlines(file_name).map {|l| l.rstrip}[6..-1]
 
       prev_point = { :voltage => 0.0, :time => 0.0 }
 
+      strike_window_begin = 243.2
+      strike_window_end = 252.8
+
+      # This is the time to the next strike point
+      strike_step = 800.0
+
       lines.each do |line|
         t, v = line.split(' ')
         t = t.to_f; v = v.to_f
 
-        return if t > strike_point
+        next if t < strike_window_begin
+        if t > strike_window_end
+          strike_window_begin += strike_step
+          strike_window_end += strike_step
+          next
+        end
 
-        if (t > 242.8 && t < strike_point) && (prev_point[:voltage] < 600.0 && v > 600.0)
+        if (t > strike_window_begin && t < strike_window_end) && (prev_point[:voltage] <= 600.0 && v > 600.0)
           intercept = calculate_intercept(prev_point, { :voltage => v, :time => t })
-          # 209.12 should be configurable.
-          x_intercept = strike_point - intercept
-          WaveCoverage.create(circuit_info.merge({ :x_intercept => x_intercept, :strike_point => strike_point }))
+          x_intercept = strike_window_end - intercept
+          WaveCoverage.create(circuit_info.merge({ :x_intercept => x_intercept, :strike_point => strike_window_end }))
         end
         prev_point[:voltage] = v
         prev_point[:time] = t
