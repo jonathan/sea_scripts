@@ -1,1 +1,14 @@
 This is just a bunch of files for helping to analyze data.
+
+data_loader is the primary place for loading your data into a postgres DB. To
+run:
+1) clone the repo 'git clone https://jonathan@github.com/jonathan/sea_scripts.git'
+1a) if you already have the repo, just do a 'git pull' in the sea_scripts dir
+2) 'cd sea_scripts/data_loader'
+3) 'sudo gem install bundler'
+4) 'bundle install'
+5) './data_import.rb DIR_TO_FILES'
+
+Depending on what you are runing, this will put data into the DB sea_data.
+There are some common sql queries in the data_loader/queries dir. To
+connect to the DB run 'psql sea_data'. To disconnect from the db use '\q'.
