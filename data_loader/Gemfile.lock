@@ -1,49 +1,42 @@
---- 
-dependencies: 
-  do_postgres: 
-    group: 
-    - :default
-    version: ">= 0"
-  dm-validations: 
-    group: 
-    - :default
-    version: ">= 0"
-  rspec: 
-    group: 
-    - :default
-    version: = 2.0.0.beta.4
-  dm-aggregates: 
-    group: 
-    - :default
-    version: ">= 0"
-  dm-core: 
-    group: 
-    - :default
-    version: ">= 0"
-specs: 
-- addressable: 
-    version: 2.1.1
-- data_objects: 
-    version: 0.10.1
-- extlib: 
-    version: 0.9.14
-- dm-core: 
-    version: 0.10.2
-- dm-aggregates: 
-    version: 0.10.2
-- dm-validations: 
-    version: 0.10.2
-- do_postgres: 
-    version: 0.10.1
-- rspec-core: 
-    version: 2.0.0.beta.4
-- rspec-expectations: 
-    version: 2.0.0.beta.4
-- rspec-mocks: 
-    version: 2.0.0.beta.4
-- rspec: 
-    version: 2.0.0.beta.4
-hash: e32bd5d1d2b9b4d11f3a7aaddcadcdbd883cbcbe
-sources: 
-- Rubygems: 
-    uri: http://gemcutter.org
+GEM
+  remote: http://rubygems.org/
+  specs:
+    addressable (2.2.1)
+    data_objects (0.10.2)
+      addressable (~> 2.1)
+    diff-lcs (1.1.2)
+    dm-aggregates (1.0.2)
+      dm-core (~> 1.0.2)
+    dm-core (1.0.2)
+      addressable (~> 2.2)
+      extlib (~> 0.9.15)
+    dm-do-adapter (1.0.2)
+      data_objects (~> 0.10.2)
+      dm-core (~> 1.0.2)
+    dm-postgres-adapter (1.0.2)
+      dm-do-adapter (~> 1.0.2)
+      do_postgres (~> 0.10.2)
+    dm-validations (1.0.2)
+      dm-core (~> 1.0.2)
+    do_postgres (0.10.2)
+      data_objects (= 0.10.2)
+    extlib (0.9.15)
+    rspec (2.0.0.beta.20)
+      rspec-core (= 2.0.0.beta.20)
+      rspec-expectations (= 2.0.0.beta.20)
+      rspec-mocks (= 2.0.0.beta.20)
+    rspec-core (2.0.0.beta.20)
+    rspec-expectations (2.0.0.beta.20)
+      diff-lcs (>= 1.1.2)
+    rspec-mocks (2.0.0.beta.20)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  dm-aggregates
+  dm-core
+  dm-postgres-adapter
+  dm-validations
+  do_postgres
+  rspec (~> 2.0.0.beta.4)
