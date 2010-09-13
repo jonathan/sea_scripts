@@ -13,13 +13,36 @@ avg(5.01969118249074)
 avg(-5.14416711437404)
 
 select * from error_points limit 10;
-select * from error_points where voltage > 5.0;
-select * from error_points where voltage between -3.0 and 3.0;
-copy error_points (COLUMNS) to '/Users/sarah/Projects/error_points.csv' with CSV HEADER;
+select * from error_points where energy = 'pos' limit 10;
+select pixel, scan, count(*) from error_points where voltage between -3.0 and 3.0 and energy = 'high';
+copy (select strike_delta from error_points where energy = 'high') to '/Users/sarah/Projects/error_points_high.csv' with CSV HEADER;
 
 select count(*) from (select pixel, count(*) from error_points group by pixel, scan having 
- count(*) = 3) as error_count;
+ count(*) = 2) as error_count;
  
-select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 5;
+select pixel, energy, count(*) from error_points group by pixel, energy;
+
+select time, strike_delta, pixel, scan from error_points
+ where pixel in (select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 5)
+    and scan in (select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 5);
+
+select time, strike_delta, error_points.pixel, error_points.scan
+from error_points
+   left outer join (
+      select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 2
+   ) as x on error_points.pixel = x.pixel and error_points.scan = x.scan
+where x.pixel is not null and x.scan is not null;
+
+copy (select time, strike_delta, error_points.pixel, error_points.scan
+from error_points
+   left outer join (
+      select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 1
+   ) as x on error_points.pixel = x.pixel and error_points.scan = x.scan
+where x.pixel is not null and x.scan is not null and energy = 'h2') 
+to '/Users/sarah/Projects/one_error_h2.csv' with CSV HEADER;
+
+select pixel, energy, count(*) from error_points group by pixel, energy having energy = 'pos' order by pixel;
+
+copy (select strike_delta from error_points where energy = 'pos' and pixel = 1225) to '/Users/sarah/Projects/error_points_1225.csv' with CSV HEADER;
  
-copy (select time, strike_delta, pixel, scan from error_points group by pixel, scan having count(*) = 1) to '/Users/sarah/Projects/single_error.csv' with CSV HEADER;
+FILE Number 1225 1260 
