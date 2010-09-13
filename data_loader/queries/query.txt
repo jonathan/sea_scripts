@@ -23,3 +23,5 @@ select count(*) from (select pixel, count(*) from error_points group by pixel, s
 select pixel, scan, count(*) from error_points group by pixel, scan having count(*) = 5;
  
 copy (select time, strike_delta, pixel, scan from error_points group by pixel, scan having count(*) = 1) to '/Users/sarah/Projects/single_error.csv' with CSV HEADER;
+
+copy (select circuit, x_intercept, strike_point, pixel, scan from wave_coverages) to '/Users/jonathan/Dropbox/RADECSnew/initial_strike_point.csv' with CSV HEADER;
